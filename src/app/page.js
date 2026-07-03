@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { deleteCode, generateCodes } from "@/lib/actions";
+import { logoutAdmin } from "@/lib/admin-actions";
+import { requireAdmin } from "@/lib/admin";
 import { formatDate, truncateUrl } from "@/lib/beacon";
 import { getSupabase } from "@/lib/supabase";
+import DeleteCodeForm from "./DeleteCodeForm";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +22,7 @@ async function getCodes() {
 }
 
 export default async function Dashboard() {
+  await requireAdmin();
   const codes = await getCodes();
   const totalScans = codes.reduce((sum, code) => sum + Number(code.scan_count || 0), 0);
   const liveCount = codes.filter((code) => code.destination).length;
@@ -31,7 +35,11 @@ export default async function Dashboard() {
           <h1>Dynamic QR codes for field programming</h1>
         </div>
         <nav className="nav">
+          <Link href="/export">Export CSV</Link>
           <Link href="/print">Print sheet</Link>
+          <form action={logoutAdmin}>
+            <button type="submit">Sign out</button>
+          </form>
         </nav>
       </header>
 
@@ -39,7 +47,7 @@ export default async function Dashboard() {
         <form action={generateCodes} className="generator">
           <label htmlFor="count">New blank codes</label>
           <div>
-            <input id="count" name="count" type="number" min="1" max="100" defaultValue="12" />
+            <input id="count" name="count" type="number" min="1" max="300" defaultValue="300" />
             <button type="submit">Generate</button>
           </div>
         </form>
@@ -87,12 +95,7 @@ export default async function Dashboard() {
                       Program
                     </Link>
                     <Link href={`/analytics/${code.id}`}>Analytics</Link>
-                    <form action={deleteCode}>
-                      <input type="hidden" name="id" value={code.id} />
-                      <button type="submit" className="link-button">
-                        Delete
-                      </button>
-                    </form>
+                    <DeleteCodeForm id={code.id} action={deleteCode} />
                   </div>
                 </td>
               </tr>

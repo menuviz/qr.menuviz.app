@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireAdmin } from "@/lib/admin";
 import { formatDate, lastNDays } from "@/lib/beacon";
 import { getSupabase } from "@/lib/supabase";
 
@@ -66,6 +67,7 @@ function buildLocations(scans) {
 }
 
 export default async function AnalyticsPage({ params }) {
+  await requireAdmin();
   const { id } = await params;
   const { code, scans } = await getAnalytics(id);
 

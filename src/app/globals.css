@@ -239,6 +239,10 @@ td {
   text-decoration: underline;
 }
 
+.danger-link {
+  color: var(--red);
+}
+
 .empty {
   margin: 0;
   padding: 1rem;
@@ -405,6 +409,10 @@ td {
   gap: 1rem;
   border-bottom: 1px solid var(--line);
   padding-bottom: 0.55rem;
+}
+
+.login-copy {
+  margin-bottom: 1rem;
 }
 
 @media (max-width: 780px) {

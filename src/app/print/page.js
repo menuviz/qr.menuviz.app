@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import QRCode from "qrcode";
 import Link from "next/link";
+import { requireAdmin } from "@/lib/admin";
 import { getSiteUrl } from "@/lib/beacon";
 import { getSupabase } from "@/lib/supabase";
 import PrintButton from "./PrintButton";
@@ -34,6 +35,7 @@ async function getPrintableCodes() {
 }
 
 export default async function PrintPage() {
+  await requireAdmin();
   const codes = await getPrintableCodes();
 
   return (

@@ -3,10 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { makeCodeId, normalizeDestination } from "@/lib/beacon";
 import { getSupabase } from "@/lib/supabase";
+import { requireAdmin } from "@/lib/admin";
 
 export async function generateCodes(formData) {
+  await requireAdmin();
   const requested = Number(formData.get("count") || 1);
-  const count = Math.max(1, Math.min(100, Number.isFinite(requested) ? requested : 1));
+  const count = Math.max(1, Math.min(300, Number.isFinite(requested) ? requested : 1));
   const rows = [];
   const seen = new Set();
 
@@ -33,6 +35,7 @@ export async function generateCodes(formData) {
 }
 
 export async function deleteCode(formData) {
+  await requireAdmin();
   const id = String(formData.get("id") || "");
   if (!id) {
     return;
