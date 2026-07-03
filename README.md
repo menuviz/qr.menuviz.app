@@ -18,6 +18,7 @@ SUPABASE_SECRET_KEY=your_supabase_secret_key
 PROGRAM_PASSCODE=field-programming-passcode
 ADMIN_USER=owner
 ADMIN_PASS=dashboard-password
+ADMIN_SESSION_SECRET=another-long-random-secret
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
