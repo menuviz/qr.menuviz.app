@@ -4,7 +4,9 @@ import { ADMIN_COOKIE, verifyAdminToken } from "./lib/session";
 const PUBLIC_PREFIXES = ["/login", "/r/", "/api/program", "/_next/"];
 const PUBLIC_FILES = ["/favicon.ico", "/robots.txt", "/sitemap.xml"];
 
-export function proxy(request) {
+// Stays on the deprecated `middleware` convention on purpose: Next 16's
+// `proxy` runs on the Node runtime, which @opennextjs/cloudflare rejects.
+export function middleware(request) {
   const { pathname, search } = request.nextUrl;
   const isPublic =
     PUBLIC_FILES.includes(pathname) ||

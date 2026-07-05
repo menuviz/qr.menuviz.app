@@ -1,5 +1,3 @@
-import { timingSafeEqual } from "crypto";
-
 export const ADMIN_COOKIE = "beacon_admin";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
 
@@ -11,10 +9,18 @@ function getSecret() {
   return secret;
 }
 
+// Constant-time comparison without node:crypto — this module is imported by
+// the middleware, which runs on the Edge runtime where node builtins are
+// unavailable.
 function safeEqual(a, b) {
-  const left = Buffer.from(a);
-  const right = Buffer.from(b);
-  return left.length === right.length && timingSafeEqual(left, right);
+  const encoder = new TextEncoder();
+  const left = encoder.encode(String(a));
+  const right = encoder.encode(String(b));
+  let diff = left.length ^ right.length;
+  for (let i = 0; i < Math.max(left.length, right.length); i += 1) {
+    diff |= (left[i] ?? 0) ^ (right[i] ?? 0);
+  }
+  return diff === 0;
 }
 
 export function createAdminToken() {

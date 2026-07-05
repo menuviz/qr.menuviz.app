@@ -1,3 +1,4 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { programCode } from "@/lib/actions";
@@ -20,12 +21,25 @@ async function getCode(id) {
   return data;
 }
 
+// Geo comes from Cloudflare's request.cf object (exposed by the OpenNext
+// adapter); the cf-ipcountry header is the fallback. Outside Workers (plain
+// `next dev`) getCloudflareContext throws — treat that as "no geo".
+function getRequestGeo() {
+  try {
+    const { cf } = getCloudflareContext();
+    return { country: cf?.country ?? null, city: cf?.city ?? null };
+  } catch {
+    return { country: null, city: null };
+  }
+}
+
 async function logScan(id) {
   const headerList = await headers();
+  const geo = getRequestGeo();
   const { error } = await getSupabase().from("scans").insert({
     qr_id: id,
-    country: headerList.get("x-vercel-ip-country"),
-    city: headerList.get("x-vercel-ip-city"),
+    country: geo.country ?? headerList.get("cf-ipcountry"),
+    city: geo.city,
     referrer: headerList.get("referer"),
     user_agent: headerList.get("user-agent"),
   });

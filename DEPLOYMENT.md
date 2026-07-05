@@ -1,37 +1,47 @@
-# Beacon Deployment Walkthrough
+# Beacon Deployment (Cloudflare Workers)
 
-## 1. Create Supabase
+Beacon runs as the Cloudflare Worker **`beacon-qr`** at **qr.menuviz.app**,
+built with `@opennextjs/cloudflare` (see `wrangler.jsonc`). It shares the
+MenuViz Supabase project (`nsqxweafdelhcrneptzc`) with menuviz-admin; its
+tables (`qr_codes`, `scans`) have RLS enabled with **no policies**, so they are
+reachable only through the server-side secret key — never the publishable key.
 
-Go to Supabase, create a new project, and wait for it to finish provisioning. Open Project Settings, then API. Copy the project URL and the service role key.
+## CI
 
-## 2. Run The Database Schema
+`.github/workflows/ci.yml`: every push/PR runs lint and the OpenNext worker
+build; pushes to `main` deploy the worker; PRs get a `*.workers.dev` preview
+URL comment.
 
-In Supabase, open SQL Editor, create a new query, paste the contents of `supabase-schema.sql`, and run it once. This creates the QR code table, scan log table, index, and dashboard stats view.
+GitHub **secrets**: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+Repo **variables** (inlined at build time): `NEXT_PUBLIC_SUPABASE_URL`,
+`NEXT_PUBLIC_SITE_URL` (baked into printed QR images — must stay
+`https://qr.menuviz.app`).
 
-## 3. Put The Code On GitHub
+## Worker secrets (runtime)
 
-Create a new GitHub repository for Beacon. From this `beacon` folder, commit the project and push it to that repository.
+Set with `npx wrangler secret put <NAME>`:
 
-## 4. Import Into Vercel
+- `SUPABASE_SECRET_KEY` — Supabase dashboard → Project Settings → API keys
+- `ADMIN_USER` / `ADMIN_PASS` — dashboard login
+- `ADMIN_SESSION_SECRET` — session cookie value
+- `PROGRAM_PASSCODE` — required to (re)program a code from `/r/{id}`
 
-In Vercel, choose Add New Project, import the GitHub repository, and keep the default Next.js settings.
+## Schema
 
-## 5. Set Environment Variables
+`supabase-schema.sql` is the reference; the live project was migrated with an
+RLS-hardened version of it (`beacon_qr_schema` migration). Scan geo (country,
+city) comes from Cloudflare's `request.cf` via the OpenNext adapter — no
+Vercel geo headers, no managed transforms needed.
 
-In the Vercel project settings, add:
+## Manual deploy
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL
-SUPABASE_SECRET_KEY
-PROGRAM_PASSCODE
-ADMIN_USER
-ADMIN_PASS
-ADMIN_SESSION_SECRET
-NEXT_PUBLIC_SITE_URL
+NEXT_PUBLIC_SUPABASE_URL=... NEXT_PUBLIC_SITE_URL=https://qr.menuviz.app \
+  npm run deploy
 ```
 
-Set `NEXT_PUBLIC_SITE_URL` to the Vercel URL for the app, such as `https://your-project.vercel.app`. This value is baked into printed QR images, so it must be the public URL people can scan.
+## Smoke test
 
-## 6. Deploy And Test
-
-Deploy the project. Visit the Vercel URL, sign in, generate one blank code, open `/print`, and scan the QR with a phone camera. Enter the programming passcode, a label, and a destination URL. Scan the same QR again; it should redirect to the destination and appear in analytics.
+Sign in at qr.menuviz.app, generate a blank code, open `/print`, scan the QR
+with a phone. Enter the programming passcode, a label, and a destination URL.
+Scan again: it should redirect and show up in analytics.

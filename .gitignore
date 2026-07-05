@@ -7,3 +7,6 @@ node_modules
 out
 dist
 *.log
+.open-next
+.wrangler
+cloudflare-env.d.ts
