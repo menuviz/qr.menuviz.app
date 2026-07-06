@@ -350,6 +350,22 @@ td {
   font-weight: 800;
 }
 
+.qr-download {
+  display: inline-block;
+  margin-top: 0.45rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid #4b6965;
+  border-radius: 6px;
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.qr-download:hover {
+  background: #eef4f3;
+}
+
 .analytics-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(260px, 0.8fr);
@@ -455,5 +471,10 @@ td {
   .qr-card {
     box-shadow: none;
     border-color: #777;
+  }
+
+  /* The full-sheet print should only show the codes, not download chrome. */
+  .qr-download {
+    display: none;
   }
 }

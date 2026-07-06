@@ -30,6 +30,16 @@ async function getPrintableCodes() {
           light: "#ffffff",
         },
       }),
+      // High-res copy for the per-code download, so a single code printed on
+      // a business card stays crisp.
+      downloadImage: await QRCode.toDataURL(`${baseUrl}/r/${code.id}`, {
+        margin: 2,
+        width: 1024,
+        color: {
+          dark: "#071716",
+          light: "#ffffff",
+        },
+      }),
     }))
   );
 }
@@ -56,6 +66,13 @@ export default async function PrintPage() {
           <article className="qr-card" key={code.id}>
             <img src={code.image} alt={`QR code ${code.id}`} />
             <p>{code.id}</p>
+            <a
+              className="qr-download"
+              href={code.downloadImage}
+              download={`beacon-${code.id}.png`}
+            >
+              Download PNG
+            </a>
           </article>
         ))}
       </section>
