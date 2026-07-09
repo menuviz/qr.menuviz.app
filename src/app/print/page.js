@@ -1,10 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
-import QRCode from "qrcode";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin";
 import { getSiteUrl } from "@/lib/beacon";
 import { filenameFor } from "@/lib/beacon";
-import { QR_IMAGE_OPTIONS, scanUrlFor } from "@/lib/qr";
+import { QR_IMAGE_OPTIONS, renderQrWithLogoDataUrl, scanUrlFor } from "@/lib/qr";
 import { getSupabase } from "@/lib/supabase";
 import PrintButton from "./PrintButton";
 
@@ -31,7 +30,7 @@ async function getPrintableCodes(ids) {
     (data || []).map(async (code) => ({
       id: code.id,
       label: code.label,
-      image: await QRCode.toDataURL(scanUrlFor(baseUrl, code.id), QR_IMAGE_OPTIONS),
+      image: await renderQrWithLogoDataUrl(scanUrlFor(baseUrl, code.id), QR_IMAGE_OPTIONS),
     }))
   );
 }

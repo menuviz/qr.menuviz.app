@@ -1,7 +1,6 @@
-import QRCode from "qrcode";
 import { requireAdmin } from "@/lib/admin";
 import { filenameFor, getSiteUrl } from "@/lib/beacon";
-import { QR_EXPORT_OPTIONS, scanUrlFor } from "@/lib/qr";
+import { QR_EXPORT_OPTIONS, renderQrWithLogo, scanUrlFor } from "@/lib/qr";
 import { getSupabase } from "@/lib/supabase";
 
 // One QR PNG per request, generated on demand — the dashboard modal and every
@@ -28,7 +27,7 @@ export async function GET(request, { params }) {
     return new Response("Unknown code.", { status: 404 });
   }
 
-  const png = await QRCode.toBuffer(
+  const png = await renderQrWithLogo(
     scanUrlFor(getSiteUrl(), id),
     QR_EXPORT_OPTIONS
   );
