@@ -9,25 +9,37 @@ export async function generateCodes(formData) {
   await requireAdmin();
   const requested = Number(formData.get("count") || 1);
   const count = Math.max(1, Math.min(300, Number.isFinite(requested) ? requested : 1));
-  const rows = [];
+  const supabase = getSupabase();
   const seen = new Set();
 
-  while (rows.length < count) {
-    const id = makeCodeId();
-    if (!seen.has(id)) {
-      seen.add(id);
-      rows.push({ id });
+  // ON CONFLICT DO NOTHING + top-up: an id collision (rare — 31^6 space) only
+  // costs re-inserting the shortfall, never the whole batch. Bounded attempts
+  // so a pathological run can't loop forever.
+  let inserted = 0;
+  for (let attempt = 0; attempt < 5 && inserted < count; attempt += 1) {
+    const rows = [];
+    while (rows.length < count - inserted) {
+      const id = makeCodeId();
+      if (!seen.has(id)) {
+        seen.add(id);
+        rows.push({ id });
+      }
     }
+
+    const { data, error } = await supabase
+      .from("qr_codes")
+      .upsert(rows, { onConflict: "id", ignoreDuplicates: true })
+      .select("id");
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    inserted += (data || []).length;
   }
 
-  const { error } = await getSupabase().from("qr_codes").insert(rows);
-
-  if (error?.code === "23505") {
-    return generateCodes(formData);
-  }
-
-  if (error) {
-    throw new Error(error.message);
+  if (inserted < count) {
+    throw new Error(`Only created ${inserted} of ${count} codes — try again.`);
   }
 
   revalidatePath("/");
